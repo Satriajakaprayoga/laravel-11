@@ -1,0 +1,52 @@
+<?php
+
+namespace App\Http\Controllers;
+
+use Illuminate\Http\Request;
+use App\Models\User;
+
+class UserController extends Controller
+{
+    public function index()
+    {
+        // $users = User::all();
+        // $users = User::orderBy('id')->whereNotNull('pegawai_id')->get();
+        $namaUser = "aisya";
+        $users = User::select('name', 'email', 'password','id')
+                        ->where('name', 'ILIKE', "%$namaUser%")
+                        ->orderBy('id')
+                        ->take(10)
+                        ->get();
+        return $users;
+    }
+
+    public function dataUser()
+    {
+        $dataUser = User::with('pegawai')
+        ->take(3)
+        ->get()
+        ->map(function ($user) {
+            // Manipulasi data pegawai
+            $pegawaiData = [];
+            if ($user->pegawai) {
+                $pegawaiData = $user->pegawai->toArray();
+                foreach ($pegawaiData as $key => $value) {
+                    if (is_null($value)) {
+                        unset($pegawaiData[$key]);
+                    }
+                }
+            }
+
+            // Manipulasi data user
+            $userData = $user->toArray();
+            foreach ($userData as $key => $value) {
+                if (is_null($value)) {
+                    unset($userData[$key]);
+                }
+            }
+            // Gabungkan data user dan data pegawai
+            return array_merge($userData, ['pegawai' => $pegawaiData]);
+        });
+        return $dataUser;
+    }
+}
